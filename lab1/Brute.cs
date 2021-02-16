@@ -44,28 +44,23 @@ namespace lab1
         {
             Thread thread = new Thread(() =>
             {
-                double speed = 0;
-                DateTime dts = DateTime.Now;
-                DateTime dt1 = dts;
-                DateTime dt2;
-                work = true;
-                int i = 0;
                 using (StreamReader sr = new StreamReader(Filename))
                 {
+                    DateTime dts = DateTime.Now;
+                    work = true;
+                    double count = 0;
                     while (work)
                     {
                         curr_value = Convert(sr.ReadLine());
+                        count++;
+
                         if (curr_value == pass || curr_value == null)
                             work = false;
-                        i++;
-                        if (i >= 1000)
-                        {
-                            dt2 = DateTime.Now;
-                            speed = i / (dt2 - dt1).TotalSeconds;
-                            dt1 = dt2;
-                            i = 0;
-                        }
-                        OnNewPassWasFound?.Invoke(curr_value, speed, DateTime.Now.Subtract(dts));
+
+                        TimeSpan totaltime = DateTime.Now.Subtract(dts);
+                        double speed = count / totaltime.TotalSeconds;
+
+                        OnNewPassWasFound?.Invoke(curr_value, speed, totaltime);
                     }
                 }
 
@@ -76,6 +71,8 @@ namespace lab1
 
         string Convert(string orig)
         {
+            if (orig == null)
+                return null;
             try
             {
                 string RusKey = "Ё!\"№;%:?*()_+ЙЦУКЕНГШЩЗХЪ/ФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,ё1234567890-=йцукенгшщзхъ\\фывапролджэячсмитьбю. ";
@@ -88,7 +85,7 @@ namespace lab1
                 }
                 return s;
             }
-            catch
+            catch (Exception)
             {
                 return null;
             }
@@ -97,30 +94,29 @@ namespace lab1
         {
             Thread thread = new Thread(() => 
             {
-                double speed = 0;
                 DateTime dts = DateTime.Now;
-                DateTime dt1 = dts;
-                DateTime dt2;
                 work = true;
                 FullBrute_SetUp();
-                int i = 0;
+                double count = 0; 
                 foreach (var p in GetCombinations(alph.ToCharArray(), MaxLength))
                 {
                     if (!work)
                         break;
+                    
                     curr_value = p;
+                    count++;
+
                     if (curr_value == pass)
-                        work = false;
-                    i++;
-                    if (i >= 1000)
                     {
-                        dt2 = DateTime.Now;
-                        speed = i / (dt2 - dt1).TotalSeconds;
-                        dt1 = dt2;
-                        i = 0;
+                        work = false;
+                        break;
                     }
 
-                    OnNewPassWasFound?.Invoke(curr_value, speed, DateTime.Now.Subtract(dts));
+
+                    TimeSpan totaltime = DateTime.Now.Subtract(dts);
+                    double speed = count / totaltime.TotalSeconds;
+
+                    OnNewPassWasFound?.Invoke(curr_value, speed, totaltime);
                 }
             });
             thread.Priority = ThreadPriority.Lowest;
